@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Typography, Button, Tag, Timeline, theme } from "antd";
 import { motion } from "framer-motion";
 import { RightOutlined } from "@ant-design/icons";
@@ -10,9 +10,9 @@ const { useToken } = theme;
 
 // 定义技能分类
 const skills = {
-  "Backend": ["Go", "Python", "Kratos (Go framework)", "Gorm", "Mock", "JWT", "Protobuf2", "Node.js"],
-  "Frontend": ["React", "HTML", "CSS", "JavaScript"],
-  "Database": ["MySQL", "Redis"],
+  Backend: ["Go", "Python", "Kratos (Go framework)", "Gorm", "Mock", "JWT", "Protobuf2", "Node.js"],
+  Frontend: ["React", "HTML", "CSS", "JavaScript"],
+  Database: ["MySQL", "Redis"],
   "Game Development": ["Unity3D", "C#"],
   "Augmented Reality": ["ARCore (Android)", "ARKit (iOS)"],
   "Cloud & Infrastructure": ["Oracle Cloud", "Nginx", "Ubuntu"],
@@ -56,6 +56,18 @@ const MainContent = () => {
   const [hoveredSkill, setHoveredSkill] = useState(null);
   // 获取当前主题
   const { token } = useToken();
+
+  // 用于移动端判断
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize(); // 初始化
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 如果 skill 在当前选定时间轴相关技能中，则返回 true
   const isSkillHighlighted = (skill) => {
@@ -102,14 +114,21 @@ const MainContent = () => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        color:token.colorText
+        color: token.colorText
       }}
     >
       {/* About Me */}
       <motion.div variants={{ hidden: { opacity: 0, y: -20 }, show: { opacity: 1, y: 0 } }}>
         <Title level={2}>Hello there!</Title>
         <Paragraph>
-          Welcome to my little corner of the internet! I’m a graduate student in Artificial Intelligence with a solid background in computer science, backend development, and project management. In simpler terms—I spend a lot of time making computers do smart things while ensuring they don’t break in the process. I’m particularly interested in AI-driven solutions and cybersecurity, where every challenge feels like a puzzle waiting to be solved. Whether it’s building efficient systems, securing digital environments, or just making technology a little less frustrating, I’m always eager to learn and improve. I believe in writing clean code, asking too many questions, and occasionally breaking things (for learning purposes, of course). If you’re here to explore, connect, or just say hi—feel free! Let’s build something great together.
+          Welcome to my little corner of the internet! I’m a graduate student in Artificial Intelligence with a solid
+          background in computer science, backend development, and project management. In simpler terms—I spend a lot of
+          time making computers do smart things while ensuring they don’t break in the process. I’m particularly
+          interested in AI-driven solutions and cybersecurity, where every challenge feels like a puzzle waiting to be
+          solved. Whether it’s building efficient systems, securing digital environments, or just making technology a
+          little less frustrating, I’m always eager to learn and improve. I believe in writing clean code, asking too
+          many questions, and occasionally breaking things (for learning purposes, of course). If you’re here to
+          explore, connect, or just say hi—feel free! Let’s build something great together.
         </Paragraph>
       </motion.div>
 
@@ -119,35 +138,75 @@ const MainContent = () => {
         style={{ marginTop: 20, width: "100%" }}
       >
         <Title level={3}>Professional Skills</Title>
+
         <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
-          {Object.entries(skills).map(([category, skillList]) => (
-            <div key={category} style={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
-              <Title level={4} style={{ margin: "0 16px 0 0", width: 220 }}>{category}:</Title>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                {skillList.map((skill, index) => {
-                  // 如果该技能在选中的 timeline 中，或鼠标悬停为该技能，则高亮
-                  const highlight = isSkillHighlighted(skill) || skill === hoveredSkill;
-                  return (
-                    <Tag
-                      key={index}
-                      onMouseEnter={() => setHoveredSkill(skill)}
-                      onMouseLeave={() => setHoveredSkill(null)}
-                      style={{
-                        borderRadius: 4,
-                        padding: "2px 8px",
-                        fontSize: 14,
-                        lineHeight: "22px",
-                        backgroundColor: highlight ? "#ffe58f" : undefined,
-                        cursor: "default"
-                      }}
-                    >
-                      {skill}
-                    </Tag>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+          {Object.entries(skills).map(([category, skillList]) => {
+            if (isMobile) {
+              // 移动端：单列上下堆叠
+              return (
+                <div key={category} style={{ marginBottom: 12 }}>
+                  {/* 类别标题上一行 */}
+                  <Title level={4} style={{ marginBottom: 4 }}>
+                    {category}
+                  </Title>
+                  {/* 技能标签下一行，换行展示 */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {skillList.map((skill, index) => {
+                      const highlight = isSkillHighlighted(skill) || skill === hoveredSkill;
+                      return (
+                        <Tag
+                          key={index}
+                          onMouseEnter={() => setHoveredSkill(skill)}
+                          onMouseLeave={() => setHoveredSkill(null)}
+                          style={{
+                            borderRadius: 4,
+                            padding: "2px 8px",
+                            fontSize: 14,
+                            lineHeight: "22px",
+                            backgroundColor: highlight ? "#ffe58f" : undefined,
+                            cursor: "default"
+                          }}
+                        >
+                          {skill}
+                        </Tag>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            } else {
+              // PC 端：保持原先左右布局
+              return (
+                <div key={category} style={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
+                  <Title level={4} style={{ margin: "0 16px 0 0", width: 220 }}>
+                    {category}:
+                  </Title>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {skillList.map((skill, index) => {
+                      const highlight = isSkillHighlighted(skill) || skill === hoveredSkill;
+                      return (
+                        <Tag
+                          key={index}
+                          onMouseEnter={() => setHoveredSkill(skill)}
+                          onMouseLeave={() => setHoveredSkill(null)}
+                          style={{
+                            borderRadius: 4,
+                            padding: "2px 8px",
+                            fontSize: 14,
+                            lineHeight: "22px",
+                            backgroundColor: highlight ? "#ffe58f" : undefined,
+                            cursor: "default"
+                          }}
+                        >
+                          {skill}
+                        </Tag>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+          })}
         </div>
       </motion.div>
 
